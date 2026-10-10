@@ -1,57 +1,62 @@
 # 把晚風留給我 · Lyric Video
 
-A 3:00 lyric video for the original song *把晚風留給我* ("Leave the Evening Breeze to Me"), with lyrics in
-Traditional Chinese. It has a soft, painterly night-time look and a full layer of motion design. Nothing in it is pixel art.
+A 3:00 lyric video for the original song *把晚風留給我* ("Leave the Evening Breeze to Me"), painted in
+watercolour and ink on paper, with lyrics in Traditional Chinese.
 **[Watch `wanfeng-lyric-video.mp4`](wanfeng-lyric-video.mp4)**
+
+Each scene is an illustration painted onto a cream page. The lyrics are inked on the paper below the painting.
+When the scene changes, the old painting fades back into the paper while the next one bleeds in from a point
+that matters in the story: a lamp, a window, the light of a door.
 
 ## Scenes
 
-Each scene follows what the lyrics are describing at that point in the song:
-
-| Time | Lyrics | Scene |
+| Time | Lyrics | Painting |
 |---|---|---|
-| 0:00 | intro | Dusk over a rainy skyline as the city lights come on. The title fades in and the rain eases. |
-| 0:12 | 雨停在末班車經過以後 / 路燈把影子… | The last bus pulls away from a wet street. A streetlamp casts a long, soft shadow. |
-| 0:18 | 便利店的門… / 沒送出的問候 / 城市總催著… | A glowing corner store. A figure holds an unsent letter while car light trails rush past. |
-| 0:27 | 舊巷盡頭 / 偶爾回頭 / 還在等候 | An old lantern-lit alley. The figure walks to the end, turns back and waits. |
-| 0:42 | Chorus 1: 把晚風留給我… | Rooftops at blue hour with ribbons of breeze. The city's lights go out on 等滿城燈火都沉默 while one window stays lit, and two stars drift together for the promise. |
-| 0:56 | 吹過你窗前那盞燈火 | A lamp-lit window with curtains billowing in the wind. |
-| 0:59 | 哪怕世界匆匆走過 / 沿著思念找到我 | The city from above in time-lapse. A ribbon of wind finds one window. |
-| 1:05 | 杯子還放在窗口 / 一半是月光，一半是以後 | A cup on the sill, lit half by moonlight and half by lamplight. Mist rolls in for "走丟". |
-| 1:16 | 繞遠的路口 / 牽一次你的手 | A lantern travels a winding road. Two people meet and join hands. |
-| 1:24 | 如果時間能夠倒流 / 向你的方向走 | Star trails that spin backwards. A figure walks toward a lit window. |
-| 1:35 | Chorus 2 | Rooftops, window and city again, with a deeper night palette. |
-| 1:58 | 也許… / 推開那扇門 / 夜色的另一邊 | Vertical lyric columns and letterbox bars. A door in the night swings open and warm light floods out. |
-| 2:07 | 唱成一首歌 / 第一束晨光 / 不再害怕錯過 | A starlit meadow. Motes of light rise from the singer, a beam of first light comes down and gathers them, and a second person arrives. |
-| 2:23 | 吹散所有遲到的寂寞 | Wind scatters heavy clouds and the moon comes out. |
-| 2:31 | 沿著你的目光 / 找到我 | Two people find each other under a streetlamp. The camera then rises into the sky. |
-| 2:44 | outro | A quiet sky over the city and the closing title. |
+| 0:00 | title | Dusk over the city, the rain easing, windows lighting up. The title is brushed on and sealed. |
+| 0:11 | Verse 1 | One long pan down a street after rain: the last bus pulling away, a streetlamp, the corner store, and a girl holding an unsent letter while traffic streaks past. |
+| 0:26 | 舊巷盡頭 / 回頭 / 等候 | An old lane of plaster walls, potted plants, red lanterns, laundry and a cat on the steps. She walks up the lane, turns back and waits. |
+| 0:41 | Chorus 1 | Rooftops at blue hour with water tanks, laundry and mountains. Gusts of breeze arrive on the downbeats. On 等滿城燈火都沉默 the city's lights go out and only one window stays lit. Two stars draw together for the promise. |
+| 0:55 | 窗前那盞燈火 / 匆匆走過 | A lamp-lit window with curtains, flower boxes and a wind chime. Clouds race across the glass, and the breeze rings the chime. |
+| 1:04 | Verse 2 | Inside: a cup on the sill, half moonlight and half lamplight. A small sketch of "tomorrow" draws itself, then mist rolls in. |
+| 1:15 | 繞遠的路口 / 牽一次你的手 | A lantern travels a winding road over the hills. Two people meet at the top and take each other's hand. |
+| 1:24 | 時間倒流 / 你的方向 | Star trails turn backwards. She walks toward a lit house. |
+| 1:34 | Chorus 2 | The rooftops and the window again, at night under a half moon. |
+| 1:57 | Bridge | A door in the night, overgrown with ivy, opens onto a warm room. The lyrics become a vertical poem in the margin. |
+| 2:10 | Final chorus | The other side of the night: a meadow. Her longing rises as light. First light comes down as a beam, and he walks through the grass to her. |
+| 2:23 | 吹散所有遲到的寂寞 | The wind scatters heavy clouds, and the city lights come back on. |
+| 2:30 | 沿著你的目光 / 找到我 | Under a streetlamp they find each other. The camera rises into the sky. |
+| 2:43 | Outro | A quiet sky with birds. The painting fades back into the paper, leaving the title and the seal. |
 
-## Motion design
+## Design
 
-- **Kinetic lyrics.** Verse lines rise in out of a blur. Chorus lines float in on the wind with a small overshoot.
-  Title-phrase lines track in from wide letter spacing and get an underline that draws itself.
-  Each character pops when it is sung, a glint travels along the line, and sparks drift off sung characters.
-  Lines leave by blowing away on the breeze.
-- **Bridge.** The lines become vertical poem columns, and letterbox bars slide in for the moment.
-- **Transitions.** Wind wipes with ribbons and petals, push-in zooms, whip pans with motion blur,
-  an iris that opens out of a lit window, and dips through the night.
-- **Camera.** It floats and rolls slightly, and breathes on the beat (89.6 BPM, detected from the track),
-  more strongly in the choruses.
-- **Light and depth.** Light leaks, lens flares on lamps and the moon, light rays, swaying foreground branches,
-  bokeh and drifting dust.
+- **Watercolour.** Washes are built from dozens of translucent, slightly different deformations of each shape
+  (recursive midpoint displacement). That gives soft bleeding edges, pooled pigment and granulation.
+  Ink lines wander a little and vary in pressure. Everything is laid onto a cold-press paper texture
+  with a multiply blend, so the paper grain and fibres show through the paint.
+- **Lyrics.** Each character is brushed on with a sweeping reveal and a little ink bleed. A watercolour
+  "highlighter" stroke grows under the words as they are sung, with its colour changing by section.
+  Sung characters darken from grey to full ink, and finished lines dilute away into the paper.
+  Each 把晚風留給我 gets a vermilion 晚風 seal stamped beside it, and the bridge is written as vertical
+  columns in the margin.
+- **Pacing.** There are 15 scene changes in 3 minutes. Each painting holds through a whole phrase, and the camera
+  moves slowly through layered parallax. All transitions are one organic watercolour bleed (a noise-field mask
+  with a faint tide line), timed just ahead of the phrase it introduces.
+- **Music.** The beat grid (89.6 BPM, detected from the track) times the gusts of wind in the choruses,
+  and lamp glows breathe with the song's loudness.
 
 ## How it's made
 
 Everything you see is drawn in code. The only assets are the song and a subset of
-[LXGW WenKai TC](https://github.com/lxgw/LxgwWenkaiTC) (SIL OFL) used for the lyrics.
+[LXGW WenKai TC](https://github.com/lxgw/LxgwWenkaiTC) (SIL OFL) for the lyrics.
 
-- `lyrics.js` holds the lyrics from the songwriter's lyric sheet, in Traditional Chinese. Timings came from separating
-  the vocals (Spleeter), running VAD, and cross-checking ASR models (Paraformer, SenseVoice, Whisper).
-- `scene.js` is a time-driven canvas engine: 18 scenes, motion transitions, a camera rig, kinetic typography and post effects.
-- `tools/envelope.py` writes `env.js`: per-frame loudness plus a beat grid from spectral-flux onsets
-  and a dynamic-programming beat tracker.
-- `render.js` renders frames in headless Chromium with Playwright and sends them to ffmpeg.
+- `lyrics.js` holds the lyrics from the songwriter's lyric sheet, in Traditional Chinese, with timings taken from the
+  vocals (Spleeter separation, VAD, and cross-checked ASR).
+- `js/paint.js` is the watercolour and ink toolkit: noise, paper, washes, ink lines, petals, wind strokes and
+  painted people.
+- `js/scenes.js` holds the paintings. Each one has baked parallax layers, a camera path and live elements.
+- `js/type.js` handles the ink typography, wash highlights and the seal.
+- `js/main.js` handles the timeline, lazy baking, bleed transitions and the composite onto paper.
+- `tools/envelope.py` writes `env.js` (loudness and beat grid). `render.js` renders frames in headless Chromium.
 
 ```bash
 ./build.sh            # needs node + playwright, python3 + numpy, ffmpeg
