@@ -211,6 +211,11 @@ if __name__ == '__main__':
     js = json.dumps(song, separators=(',', ':'))
     open(os.path.join(root, 'build', 'song.json'), 'w').write(js)
     open(os.path.join(root, 'build', 'song.js'), 'w').write('window.SONG=' + js + ';\n')
+    def ts(x): return f"{int(x // 3600):02d}:{int(x % 3600 // 60):02d}:{int(x % 60):02d},{int(round(x % 1 * 1000)) % 1000:03d}"
+    Ls = song['lines']
+    ends = [min(L['t1'] + .2, Ls[i + 1]['t0'] - .25) if i + 1 < len(Ls) else L['t1'] + .2 for i, L in enumerate(Ls)]
+    srt = [f"{i + 1}\n{ts(max(0, L['t0'] - .25))} --> {ts(ends[i])}\n{L['text']}\n" for i, L in enumerate(Ls)]
+    open(os.path.join(root, 'build', 'lyrics.srt'), 'w').write('\n'.join(srt))
     print(f"{song['title']}: {song['bars']} bars, {song['duration']:.0f}s, {len(song['notes'])} sung syllables, {len(song['lines'])} lines")
     for s in song['sections']:
         print(f"  {s['t0']:6.1f}s  bar {s['bar'] + 1:2d}  {s['name']:<13} {' '.join(c['sym'] for c in s['chords'])}")

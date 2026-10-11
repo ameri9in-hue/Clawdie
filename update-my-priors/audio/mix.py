@@ -191,15 +191,32 @@ def oohs():
 
 # ---------------------------------------------------------------- lead vocal
 def lead():
+    """Lead vocal. Neural singer (Kokoro + WORLD, audio/singer.py) when the models are present,
+    otherwise the formant robot. In choruses the robot doubles the lead quietly: PRIOR's real voice."""
+    import singer
+    engine = os.environ.get('VOICE', 'kokoro' if singer.available() else 'formant')
+    vb = singer.Voicebank(os.environ.get('SINGER', 'af_heart')) if engine == 'kokoro' else None
+    print(f'    voice engine: {engine}' + (f' ({vb.voice})' if vb else ''), flush=True)
     notes = song['notes']; prev = None
     for i, n in enumerate(notes):
         pm = prev['midi'] if prev and n['t'] - (prev['t'] + prev['dur']) < .06 else None
-        y, off = sing(n['key'], n['midi'], n['dur'], prev_midi=pm)
-        add('vocal', y, n['t'] + off, .9, -.04)
-        add('vocal', y, n['t'] + off + .013, .35, .7)          # Haas double for width
-        if song['sections'][n['section']]['arr']['drums'] == 'chorus':   # octave-down double in choruses
-            y2, off2 = sing(n['key'], n['midi'] - 12, n['dur'], prev_midi=pm and pm - 12, vibrato=.5)
-            add('vocal', y2, n['t'] + off2, .28, .3)
+        nxt = notes[i + 1] if i + 1 < len(notes) else None
+        legato = bool(nxt and nxt['t'] - (n['t'] + n['dur']) < .06)
+        chorus = song['sections'][n['section']]['arr']['drums'] == 'chorus'
+        if vb:
+            y, off = singer.render_note(vb, n['key'], n['midi'], n['dur'], pm, legato_next=legato)
+            add('vocal', y, n['t'] + off, 2.0, -.02)
+            add('vocal', y, n['t'] + off + .017, .45, .65)            # Haas double for width
+            if chorus:
+                r, ro = sing(n['key'], n['midi'], n['dur'], prev_midi=pm, vibrato=.4)
+                add('vocal', r, n['t'] + ro, .22, -.55)              # robot double
+        else:
+            y, off = sing(n['key'], n['midi'], n['dur'], prev_midi=pm)
+            add('vocal', y, n['t'] + off, .9, -.04)
+            add('vocal', y, n['t'] + off + .013, .35, .7)
+            if chorus:
+                y2, off2 = sing(n['key'], n['midi'] - 12, n['dur'], prev_midi=pm and pm - 12, vibrato=.5)
+                add('vocal', y2, n['t'] + off2, .28, .3)
         prev = n
 
 # ---------------------------------------------------------------- fx
@@ -246,6 +263,20 @@ def compress(x, thresh=.25, ratio=3.0, win=.02):
     g = np.where(p > thresh, (np.maximum(p, 1e-9) / thresh) ** (1 / ratio - 1), 1.0)
     return x * g
 
+def deess(x, fc=5500, thresh=.03, ratio=4.0):
+    """Split at fc and compress only the highs: tames the neural voice's sibilants."""
+    hi = np.stack([highpass(c, fc) for c in x])
+    return x - hi + compress(hi, thresh, ratio, .005)
+
+def export_vocal_env(v, fps=30):
+    """Loudness of the lead vocal per video frame (0..1) -> build/vocal_env.js, so PRIOR glows when it sings."""
+    hop = SR // fps; m = v.mean(0)
+    r = np.sqrt(np.add.reduceat(m ** 2, np.arange(0, len(m), hop)) / hop)
+    r = np.clip(r / (np.percentile(r[r > 1e-4], 95) + 1e-9), 0, 1)
+    out = np.zeros_like(r); a = 0.0
+    for i, x in enumerate(r): a = x if x > a else a * .8 + x * .2; out[i] = a
+    open(os.path.join(BUILD, 'vocal_env.js'), 'w').write('window.VOCAL_ENV=[' + ','.join(f'{x:.2f}' for x in out) + '];\n')
+
 def write(path, x):
     x = np.clip(x, -1, 1)
     with wave.open(path, 'wb') as w:
@@ -259,8 +290,9 @@ if __name__ == '__main__':
     duck = duck_env()
     for k in ('bass', 'pad', 'arp', 'ooh'):
         BUSES[k] *= duck if k != 'bass' else (.4 + .6 * duck)
-    BUSES['vocal'] = compress(BUSES['vocal'], .12, 3.5)
+    BUSES['vocal'] = compress(deess(BUSES['vocal']), .12, 3.5)
     print('  bus rms (dB):', ', '.join(f"{k} {20 * np.log10(np.sqrt((BUSES[k] ** 2).mean()) * LEVEL[k] + 1e-9):.1f}" for k in BUSES))
+    export_vocal_env(BUSES['vocal'])
     dry = sum(BUSES[k] * LEVEL[k] for k in BUSES)
     wet = reverb(sum(BUSES[k] * LEVEL[k] * SEND[k] for k in BUSES))
     master = dry + wet

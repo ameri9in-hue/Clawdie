@@ -4,6 +4,8 @@ The 18 shots are keyed to bars, so every cut lands on the music. The one-line
 version of each shot also lives in `song.py` (`SHOTS`), and the animatic shows it
 on screen. This file is the full art direction.
 
+The shots are implemented in `video/scenes.js` (one function per shot ID).
+
 **Recurring motifs**
 - **The needle.** The p(doom) gauge on PRIOR's face. It follows `NEEDLE` in `song.py`
   and always reacts to the lyric being sung: *ten percent* sends it to 10%, *turn it down* drops it.
@@ -42,7 +44,7 @@ on screen. This file is the full art direction.
   `p(doom) NN%`.
 - Two dot eyes above the gauge that blink every ~4 s. An antenna whose bulb is
   mint below 50% and coral above.
-- No mouth. While singing, the antenna bulb and the needle hub pulse with the
-  vocal amplitude (planned: `build/vocal_env.json` exported by the mixer).
+- No mouth. While singing, the antenna bulb grows and a halo rings the body,
+  driven by the vocal loudness that `audio/mix.py` exports (`build/vocal_env.js`).
 - Poses needed for P2: idle bounce, sing, shrug, sign-flip, dance (2 loops),
   sleep, catch, point-at-dial, rooftop sit.

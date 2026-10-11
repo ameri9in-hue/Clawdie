@@ -4,16 +4,23 @@
 <meta charset="utf-8">
 <title>Update My Priors</title>
 <style>
+@font-face{font-family:"Archivo Black";src:url(fonts/ArchivoBlack.woff2) format('woff2');font-weight:400}
+@font-face{font-family:"Space Grotesk";src:url(fonts/SpaceGrotesk-Bold.woff2) format('woff2');font-weight:700}
+@font-face{font-family:"Space Grotesk";src:url(fonts/SpaceGrotesk.woff2) format('woff2');font-weight:400}
+@font-face{font-family:"JetBrains Mono";src:url(fonts/JetBrainsMono-Bold.woff2) format('woff2');font-weight:400 700}
 html,body{margin:0;height:100%;background:#0d0f22;overflow:hidden}
 canvas{display:block;position:absolute;inset:0;margin:auto;width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh}
 </style>
 </head>
 <body>
-<!-- index.html?t=42 shows one frame, ?res=540 renders smaller, ?final=1 hides the animatic overlay.
+<!-- index.html?t=42 shows one frame, ?res=540 renders smaller, ?animatic=1 adds the storyboard overlay.
      Press space to play with build/audio.wav. -->
 <canvas id="c"></canvas>
 <audio id="a" src="../build/audio.wav" preload="auto"></audio>
 <script src="../build/song.js"></script>
+<script src="../build/vocal_env.js"></script>
+<script src="kit.js"></script>
+<script src="scenes.js"></script>
 <script src="mv.js"></script>
 </body>
 </html>

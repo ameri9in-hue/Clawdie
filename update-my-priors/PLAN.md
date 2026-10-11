@@ -1,9 +1,10 @@
 # Production path: Update My Priors
 
 An original music video in the "p(doom)" lineage of animated AI-safety pop songs,
-built from zero: concept, lyrics, melody, harmony, rhythm, synth sounds, the
-singing voice and every frame are written as code in this folder. There are no
-samples, stock assets, AI music services or text-to-speech engines.
+built from zero: concept, lyrics, melody, harmony, rhythm, synth sounds and every
+frame are written as code in this folder. There are no samples, stock assets or
+AI music services. The only pretrained model is a local open-weights speech
+model (Kokoro-82M, Apache-2.0), used as a voicebank that our own code makes sing.
 
 ## 1. What we take from the reference, and what we don't
 
@@ -38,9 +39,13 @@ samples, stock assets, AI music services or text-to-speech engines.
 - Bass: saw plus sub, eighth-note pulse, octave pops in the choruses. Sidechained to the kick.
 - Pads: 3× detuned supersaw chords; the lowpass opens section by section.
 - Arp: 16th-note square plucks with a dotted-eighth echo.
-- Voice: PRIOR sings through a from-scratch **formant synthesizer**
-  (`audio/voice.py`), with a hand-written phonetic dictionary for every
-  syllable in the lyrics. It's robotic on purpose. "Ooh" backing pads use the same voice.
+- Voice: PRIOR sings through a **local neural voicebank** (`audio/singer.py`).
+  Kokoro-82M speaks each syllable from our phonetic dictionary. Then the WORLD
+  vocoder stretches the vowel to the note, swaps in the melody's pitch (scoops,
+  portamento, delayed vibrato) and resynthesizes it, like an UTAU-style engine.
+  The from-scratch **formant synthesizer** (`audio/voice.py`) still sings a quiet
+  robotic double in the choruses and the "ooh" pads, and is the fallback when the
+  models are missing.
 
 ## 4. Architecture: one timeline, two renderers
 
@@ -68,10 +73,10 @@ and the needle together. Nothing is hand-synced.
 | Phase | Goal | Deliverables | Exit check | Status |
 |---|---|---|---|---|
 | **P0 Pre-production** | Everything needed to start | Concept, [LYRICS.md](LYRICS.md), composition in `song.py`, [STORYBOARD.md](STORYBOARD.md), working audio + video pipeline, animatic v0 | `./build.sh` runs end to end; every line's rhythm fits its bars (asserted) | **Done** |
-| **P1 Song lock** | The song sounds finished | Voice intelligibility pass (lexicon, consonant timing, formant tuning), arrangement fills, drum variations, mix and master to about −14 LUFS | Human listen-through with lyrics hidden: at least 70% of words understood. No clipping. | Next |
-| **P2 Visual development** | Lock the look before animating | Style frames for S02, S06, S13, S15, S17. PRIOR pose sheet (see storyboard). Motion kit: easing, transitions, kinetic-type presets | Five stills approved | |
-| **P3 Shot production** | All 18 shots animated | One scene function per shot in `video/scenes/`, in song order. Vocal-envelope export for PRIOR's "mouth" (antenna and hub pulse) | Every shot plays in sequence at final timing | |
-| **P4 Polish** | Feels like one piece | Transitions on bar lines, glitch frames matched to stutters, grain and vignette pass, end card, `.srt` captions generated from `song.json` | Full watch-through, no dead frames | |
+| **P1 Song lock** | The song sounds finished | Neural singer (Kokoro + WORLD) **done**, de-esser **done**. Left: listen-through fixes per word, drum fills, counter-melody in the final chorus, master to about −14 LUFS | Human listen-through with lyrics hidden: at least 70% of words understood. No clipping. | **In progress** |
+| **P2 Visual development** | Lock the look before animating | Fonts, palette, PRIOR rig with poses, motion kit (`video/kit.js`) | Stills of every shot reviewed | **Done** |
+| **P3 Shot production** | All 18 shots animated | `video/scenes.js` (S01 to S18). Vocal envelope drives PRIOR's antenna and halo | Every shot plays in sequence at final timing | **Done (v1)** |
+| **P4 Polish** | Feels like one piece | Wipes and flashes on bar lines **done**, bridge glitch on the stutters **done**, grain and vignette **done**. Left: `.srt` captions, more secondary motion per shot | Full watch-through, no dead frames | **In progress** |
 | **P5 Delivery** | Ship it | `FINAL=1 ./build.sh` at 1080p, thumbnail (S06 frame), description, captions, credits | Plays on phone and desktop; file under 200 MB | |
 
 ### P1 detail (start here)
@@ -83,16 +88,18 @@ and the needle together. Nothing is hand-synced.
 4. Master: measure loudness (`ffmpeg -af ebur128`) and tune `LEVEL` in `audio/mix.py`.
 
 ### P3 detail
-- `video/mv.js` keeps the frame loop. Each shot becomes `scenes/Sxx.js` exporting
-  `draw(t, ctx, song)`. The router picks a scene by bar range (the same mapping the
-  animatic overlay uses today).
-- Shared kit: `prior()` (character), `beliefCurve()`, `lyrics()`, `headlines()` already exist.
+- `video/mv.js` keeps the frame loop and routes song time to a shot (each section's
+  `shots` in `song.py` split it evenly). `video/scenes.js` holds one draw function per shot.
+- `video/kit.js` is shared: `prior()` (rig with poses: arms, lean, squash, eyes, props,
+  sitting), `gauge()`, `skyline()`, `stars()`, `rays()`, `halftone()`, icons, hands, crowd, grain, vignette.
+- A scene can draw the lyrics itself (S06 kinetic type) by setting `x.ownLyrics`.
 
 ## 6. Risks and mitigations
 
 | Risk | Mitigation |
 |---|---|
-| Synthesized voice not intelligible enough | Lyrics are always on screen. Per-word lexicon tuning in P1. Fallback: the stems are separate, so a human vocal can replace `vocal.wav` without touching anything else. |
+| Synthesized voice not intelligible enough | Switched the lead to a neural voicebank. Lyrics are always on screen. Per-word lexicon tuning in P1. The stems are separate, so a human vocal can replace `vocal.wav` without touching anything else. |
+| Model weights unavailable (HuggingFace and GitHub were blocked in the build environment) | Weights come from npm (`kokoro-q8-shards`, checksum-verified). `VOICE=formant` falls back to the built-in synth. |
 | Mixing without ears in the loop | Per-bus and per-section loudness printed on every build. A human listen gate ends P1. |
 | Render time at 1080p | Drafts with `RES=540`. 4 parallel Chromium workers. Every frame is a pure function of `t`, so single stills render instantly (`node video/render.js stills 45.2`). |
 | Drifting too close to the reference | Section 1 is the contract: no reused lyrics, melody, title or character. |

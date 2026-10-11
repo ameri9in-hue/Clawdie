@@ -4,33 +4,41 @@ An original electro-pop music video about p(doom). PRIOR, a little robot whose
 face is a p(doom) gauge, stays up all night updating its estimate with every
 AI headline, and learns the number is a dial, not a verdict.
 
-Everything is made from scratch in code: lyrics, melody, chords, drums, synths,
-the singing voice (a hand-built formant synthesizer) and every frame.
+Lyrics, melody, chords, drums, synths and every frame are made from scratch in code.
+PRIOR sings through a local open-weights speech model (Kokoro-82M) that our own
+code turns into a singer, with a hand-built formant robot voice doubling it.
 
-**Status: P0 (pre-production) done.** The song plays end to end with the robot
-voice, and [`update-my-priors-animatic.mp4`](update-my-priors-animatic.mp4) shows
-final timing, lyrics, needle and character with the storyboard notes overlaid.
-The full production path is in [PLAN.md](PLAN.md).
+**Status: v1 music video.** [`update-my-priors.mp4`](update-my-priors.mp4) is the full
+2:26 video: 18 fully designed shots, sung by PRIOR through a local neural voice.
+The production path and what is left are in [PLAN.md](PLAN.md).
 
 | File | What it is |
 |---|---|
-| [PLAN.md](PLAN.md) | The production path: concept, look, architecture, phases P0 to P5, risks |
+| [PLAN.md](PLAN.md) | The production path: concept, look, architecture, phases, risks |
 | [LYRICS.md](LYRICS.md) | The lyrics |
 | [STORYBOARD.md](STORYBOARD.md) | 18 shots keyed to bars, plus the character sheet |
 | `song.py` | **The song as data**: sections, chords, melody with syllables, needle keyframes, shots |
-| `audio/voice.py` | PRIOR's singing voice: formant synthesis and a phonetic dictionary |
-| `audio/mix.py` | Drums, bass, pads, arp, backing oohs, FX, reverb, mix → `build/audio.wav` + stems |
-| `video/mv.js` | Canvas engine. Each frame is a pure function of `t`. Draws the animatic today. |
+| `audio/singer.py` | **Neural singing voice**: Kokoro-82M (local ONNX) as a voicebank, turned into singing with the WORLD vocoder |
+| `audio/voice.py` | The from-scratch formant robot voice (fallback, and PRIOR's robotic double in the choruses) |
+| `audio/mix.py` | Drums, bass, pads, arp, backing oohs, FX, de-esser, reverb, mix → `build/audio.wav`, stems, vocal envelope |
+| `audio/get_models.sh` | Fetches the Kokoro weights + voice styles from npm and verifies the checksum |
+| `video/kit.js` | Drawing kit: PRIOR's rig and poses, gauges, skylines, particles, grain, post FX |
+| `video/scenes.js` | The 18 shots |
+| `video/mv.js` | Engine: shot routing, karaoke lyrics, wipes/flashes, bridge glitch. Every frame is a pure function of `t` |
 | `video/render.js` | Headless Chromium → ffmpeg frame renderer |
 | `build.sh` | Builds everything |
 
 ```bash
-./build.sh audio           # just the song: build/audio.wav and build/stems/*.wav (~45 s)
-RES=540 ./build.sh         # quick animatic draft
-./build.sh                 # 1080p animatic
-FINAL=1 ./build.sh         # final video without the overlay
+audio/get_models.sh                 # once: Kokoro-82M weights (92 MB) + voices into models/
+pip install kokoro-onnx pyworld scipy
+./build.sh audio                    # just the song (~4 min first time, ~45 s once the voicebank is cached)
+RES=540 ./build.sh                  # quick draft video
+./build.sh                          # 1080p music video
+ANIMATIC=1 ./build.sh               # same, with the storyboard overlay
+VOICE=formant ./build.sh            # the old robot voice instead of the neural singer
 # live preview: open video/index.html after building, press space to play with audio;
 # video/index.html?t=42 shows one frame
 ```
 
 Needs python3 with numpy, node with playwright (Chromium), and ffmpeg.
+Fonts (Archivo Black, Space Grotesk, JetBrains Mono) are OFL-licensed, from @fontsource.

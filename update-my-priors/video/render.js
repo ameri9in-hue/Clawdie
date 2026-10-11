@@ -1,4 +1,4 @@
-// Offline renderer for UPDATE MY PRIORS (env RES=540 for drafts, FINAL=1 hides the animatic overlay).
+// Offline renderer for UPDATE MY PRIORS (env RES=540 for drafts, ANIMATIC=1 adds the storyboard overlay).
 // Drives index.html in headless Chromium and pipes frames to ffmpeg.
 //   node render.js meta                 -> prints duration and fps
 //   node render.js stills 3.2 15 40.5   -> writes build/still_<t>.png
@@ -10,7 +10,7 @@ const path = require('path');
 
 const ROOT = __dirname, OUT = path.join(ROOT, '..', 'build');
 fs.mkdirSync(OUT, { recursive: true });
-const URL = 'file://' + path.join(ROOT, 'index.html') + '?render=1' + (process.env.RES ? '&res=' + process.env.RES : '') + (process.env.FINAL ? '&final=1' : '');
+const URL = 'file://' + path.join(ROOT, 'index.html') + '?render=1' + (process.env.RES ? '&res=' + process.env.RES : '') + (process.env.ANIMATIC ? '&animatic=1' : '');
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
@@ -46,7 +46,7 @@ async function main() {
       const f0 = w * per, f1 = Math.min(total, f0 + per);
       const seg = path.join(OUT, `seg${w}.mp4`);
       const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(meta.fps), '-c:v', 'png', '-i', '-',
-        '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p', '-tune', 'animation', seg], { stdio: ['pipe', 'inherit', 'inherit'] });
+        '-c:v', 'libx264', '-preset', 'medium', '-crf', process.env.CRF || '20', '-pix_fmt', 'yuv420p', '-tune', 'animation', seg], { stdio: ['pipe', 'inherit', 'inherit'] });
       for (let f = f0; f < f1; f++) {
         const b64 = await grab(p, f / meta.fps);
         const buf = Buffer.from(b64, 'base64');
