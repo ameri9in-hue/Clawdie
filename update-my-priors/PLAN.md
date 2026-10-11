@@ -43,11 +43,11 @@ model (Kokoro-82M, Apache-2.0), used as a voicebank that our own code makes sing
   Kokoro-82M speaks each syllable from our phonetic dictionary. Then the WORLD
   vocoder stretches the vowel to the note, swaps in the melody's pitch (scoops,
   portamento, delayed vibrato) and resynthesizes it, like an UTAU-style engine.
-  An alternative performance comes from **ACE-Step 1.5** (`audio/acestep_cover.py`):
-  cover mode takes our finished mix plus our tagged lyrics and regenerates vocals and
-  production while keeping our structure. On a 4-core CPU in bfloat16 it renders the
-  whole song in about 8 minutes, and `audio/check_sync.py` confirms it stays within
-  10 ms of our beat grid, so the same video frames fit it.
+  The lead performance now comes from **ACE-Step 1.5** (`audio/acestep_song.py`): its
+  planning LM sings our tagged lyrics at 120 BPM in A minor. Takes are scored by
+  `audio/lyric_check.py` (Demucs vocal split + Whisper, no lyric hints): take 11 scores
+  92% of our words, against 51% for the Kokoro voice and 48% for an ACE-Step cover of
+  our mix. `audio/retime.py` then re-times the whole video to the take's actual singing.
   The from-scratch **formant synthesizer** (`audio/voice.py`) still sings a quiet
   robotic double in the choruses and the "ooh" pads, and is the fallback when the
   models are missing.
@@ -104,7 +104,7 @@ and the needle together. Nothing is hand-synced.
 | Risk | Mitigation |
 |---|---|
 | Synthesized voice not intelligible enough | Switched the lead to a neural voicebank. Lyrics are always on screen. Per-word lexicon tuning in P1. The stems are separate, so a human vocal can replace `vocal.wav` without touching anything else. |
-| ACE-Step regenerates the performance, so it can reinterpret parts (it loosened the half-time bridge) | Cover strength 1.0, our lyrics and section tags as conditioning, and an automatic sync check that fails the build if sung sections drift |
+| A generated performance might not sing our words (the first ACE-Step attempt, a cover, did not) | Every take is transcribed and scored; the build refuses a take below 75% word accuracy, and the video is re-timed to the words as actually sung |
 | Model weights unavailable (HuggingFace and GitHub were blocked in the build environment at first) | Weights come from npm (`kokoro-q8-shards`, checksum-verified). `VOICE=formant` falls back to the built-in synth. |
 | Mixing without ears in the loop | Per-bus and per-section loudness printed on every build. A human listen gate ends P1. |
 | Render time at 1080p | Drafts with `RES=540`. 4 parallel Chromium workers. Every frame is a pure function of `t`, so single stills render instantly (`node video/render.js stills 45.2`). |

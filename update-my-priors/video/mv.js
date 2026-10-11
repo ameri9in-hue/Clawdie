@@ -5,7 +5,22 @@
 (() => {
 const S = window.SONG, { W, H, C, F, clamp, lerp, inv, smooth, easeInOut, hash, noise1, BAR, BEAT, pulse, mix, rgba, text, measure, rr,
   vignette, grain, scanlines } = window.K;
-const FPS = 30, DURATION = S.duration + 2.5;
+const FPS = 30;
+// TIMEMAP (audio/retime.py) gives the song time for each video frame of a performance whose
+// timing differs from song.py (an ACE-Step take). Anchored on the words Whisper heard sung.
+const TM = window.TIMEMAP || null;
+// WORD_TIMES: when each word is actually sung in that performance (song time). Re-time notes and lines to it.
+if (window.WORD_TIMES) {
+  S.words.forEach((w, i) => {
+    const [a, b] = window.WORD_TIMES[i], n = w.notes.length;
+    w.notes.forEach((ni, k) => { S.notes[ni].t = a + (b - a) * k / n; S.notes[ni].dur = (b - a) / n; });
+  });
+  S.lines.forEach((L, li) => { const ws = S.words.filter(w => w.line === li); if (!ws.length) return;
+    const f = S.notes[ws[0].notes[0]], l = S.notes[ws[ws.length - 1].notes.slice(-1)[0]]; L.t0 = f.t; L.t1 = l.t + l.dur; });
+}
+const DURATION = TM ? TM.length / FPS : S.duration + 2.5;
+const songTime = tv => { if (!TM) return tv; const f = clamp(tv * FPS, 0, TM.length - 1), i = Math.floor(f);
+  return lerp(TM[i], TM[Math.min(TM.length - 1, i + 1)], f - i); };
 const q = new URLSearchParams(location.search);
 const RES = parseInt(q.get('res') || '1080'), ANIMATIC = q.has('animatic');
 const cv = document.getElementById('c');
@@ -36,36 +51,6 @@ function needle(t) {
 }
 function lineAt(t) { let best = null; for (const L of S.lines) if (t >= L.t0 - .6 && t < L.t1 + .25) best = L; return best; }
 const wordsOf = L => S.words.filter(w => w.line === S.lines.indexOf(L));
-
-// ------------------------------------------------------------ lyrics: lower third, karaoke per syllable
-function lyrics(t, mono) {
-  const L = lineAt(t); if (!L) return;
-  const words = wordsOf(L);
-  let size = 66; const gap = () => size * .3;
-  const raw = words.map(w => measure(g, w.text, size, F.ui, 700));
-  const fit = Math.min(1, 1500 / (raw.reduce((a, b) => a + b, 0) + gap() * (words.length - 1)));
-  size *= fit; const widths = raw.map(w => w * fit);
-  const total = widths.reduce((a, b) => a + b, 0) + gap() * (words.length - 1);
-  const fadeIn = clamp((t - (L.t0 - .6)) / .3), fadeOut = 1 - clamp((t - L.t1) / .25), a = fadeIn * fadeOut;
-  const y = 960;
-  g.save(); g.globalAlpha = a * .78;
-  g.fillStyle = mono ? 'rgba(0,0,0,.8)' : 'rgba(10,10,28,.62)'; rr(g, W / 2 - total / 2 - 50, y - size * .85, total + 100, size * 1.7, size * .85); g.fill();
-  g.restore();
-  let x = W / 2 - total / 2;
-  words.forEach((w, i) => {
-    const n0 = S.notes[w.notes[0]], n1 = S.notes[w.notes[w.notes.length - 1]];
-    const on = t >= n0.t - .03, done = t >= n1.t + n1.dur;
-    const pop = on && !done ? 1 + .1 * Math.exp(-(t - n0.t) * 9) : 1;
-    // karaoke wipe across the word, syllable by syllable
-    const prog = clamp((t - n0.t) / (n1.t + n1.dur - n0.t));
-    g.save(); g.translate(x + widths[i] / 2, y); g.scale(pop, pop); g.translate(-widths[i] / 2, 0);
-    text(g, w.text, 0, 0, size, rgba(C.cream, .35), { align: 'left', alpha: a });
-    if (prog > 0) { g.save(); g.beginPath(); g.rect(-5, -size, widths[i] * prog + 5, size * 2); g.clip();
-      text(g, w.text, 0, 0, size, done ? C.cream : (mono ? '#ffffff' : C.sun), { align: 'left', alpha: a }); g.restore(); }
-    g.restore();
-    x += widths[i] + gap();
-  });
-}
 
 // ------------------------------------------------------------ transitions + post
 function wipe(t, tb) {
@@ -99,13 +84,44 @@ function overlay(t, shot) {
   g.restore();
 }
 
+// ------------------------------------------------------------ camera + light
+// A living camera: slow drift, a hint of roll, and a punch-zoom on the kick (harder in choruses).
+function camera(t, sec) {
+  const chorus = sec.arr.drums === 'chorus', punch = pulse(t, BEAT, 10) * (chorus ? .028 : sec.arr.drums === 'none' ? 0 : .01);
+  const z = 1.035 + .012 * Math.sin(t * .23) + punch;
+  g.translate(W / 2, H / 2); g.scale(z, z); g.rotate(noise1(t * .11 + 3) * .006);
+  g.translate(-W / 2 + noise1(t * .17) * 16, -H / 2 + noise1(t * .17 + 9) * 11);
+}
+let BLOOM = null;
+function bloom(amount) {             // bright parts glow: blurred, contrast-crushed copy screened on top
+  if (!BLOOM) { BLOOM = document.createElement('canvas'); BLOOM.width = cv.width / 4; BLOOM.height = cv.height / 4; }
+  const b = BLOOM.getContext('2d');
+  b.globalCompositeOperation = 'copy'; b.filter = 'brightness(0.75) contrast(2.4) blur(5px)';
+  b.drawImage(cv, 0, 0, BLOOM.width, BLOOM.height); b.filter = 'none';
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'screen'; g.globalAlpha = amount;
+  g.drawImage(BLOOM, 0, 0, cv.width, cv.height); g.restore();
+}
+const LEAK = { 'Intro': C.violet, 'Verse 1': C.sky, 'Pre-Chorus 1': C.coral, 'Chorus 1': C.sun, 'Verse 2': C.violet, 'Pre-Chorus 2': C.coral,
+  'Chorus 2': C.sun, 'Bridge': '#ffffff', 'Final Chorus': C.sun, 'Tag': C.coral, 'Outro': C.violet };
+function lightLeak(t, sec) {         // two soft colored lights drifting across the frame
+  g.save(); g.globalCompositeOperation = 'screen';
+  for (let i = 0; i < 2; i++) {
+    const x = W * (.5 + .55 * Math.sin(t * .09 + i * 2.6)), y = H * (.5 + .45 * Math.cos(t * .07 + i * 1.7)), r = 900;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, rgba(LEAK[sec.name] || C.sun, sec.name === 'Bridge' ? .05 : .13)); gr.addColorStop(1, rgba(C.ink, 0));
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  }
+  g.restore();
+}
+
 // ------------------------------------------------------------ frame
-function renderAt(t) {
+function renderAt(tv) {
+  const t = songTime(tv);
   g.setTransform(SC, 0, 0, SC, 0, 0);
-  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none';
   const shot = shotAt(t), p = needle(t);
   const x = { lt: t - shot.t0, p, S, line: lineAt, words: wordsOf, ownLyrics: false };
-  g.save(); window.SCENES[shot.id](g, t, x); g.restore();
+  g.save(); camera(t, shot.sec); window.SCENES[shot.id](g, t, x); g.restore();
   const bridge = shot.sec.name === 'Bridge';
   if (bridge) {
     const bb = t / S.bar_sec - shot.sec.bar;
@@ -113,8 +129,10 @@ function renderAt(t) {
     const beatGlitch = pulse(t, BEAT, 14) > .6 && hash(Math.floor(t / BEAT)) > .55;
     if (stutter || beatGlitch) glitch(t, stutter ? 1 : .35, Math.floor(t * 24));
   }
-  if (!x.ownLyrics && t > 15.5) lyrics(t, bridge);
-  vignette(g, bridge ? .7 : .45);
+  lightLeak(t, shot.sec);
+  if (!x.ownLyrics) window.LYRICS.draw(g, t, S, shot.sec, shot.id);
+  bloom(bridge ? .35 : .55);
+  vignette(g, bridge ? .7 : .42);
   grain(g, t, .07);
   // cuts
   for (const s of SHOTS) {

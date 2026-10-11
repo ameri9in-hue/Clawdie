@@ -236,11 +236,11 @@ function preChorus(g, t, x, second) {
     g.lineWidth = 3; g.beginPath(); g.moveTo(W / 2 + Math.cos(a) * r0, H / 2 + Math.sin(a) * r0); g.lineTo(W / 2 + Math.cos(a) * (r0 + 120 + roll * 200), H / 2 + Math.sin(a) * (r0 + 120 + roll * 200)); g.stroke(); }
   const tremble = Math.sin(t * 50) * .02 * (1 + roll * 3);
   if (!second) {
-    gauge(g, W / 2, H / 2 - 40, 330, x.p + tremble, { face: C.night, rim: C.cream });
+    gauge(g, W / 2, H / 2 - 110, 290, x.p + tremble, { face: C.night, rim: C.cream });
   } else {
-    gauge(g, 620, H / 2 + 20, 300, x.p + tremble, { face: C.night, rim: C.cream });
+    gauge(g, 620, H / 2 - 90, 260, x.p + tremble, { face: C.night, rim: C.cream });
     const slide = easeOut(inv(.2, 1.4, lt));
-    g.save(); g.translate(lerp(W + 400, 1330, slide), H / 2 + 40); g.rotate(.06);
+    g.save(); g.translate(lerp(W + 400, 1330, slide), H / 2 - 60); g.scale(.85, .85); g.rotate(.06);
     g.fillStyle = '#0d0d16'; rr(g, -250, -430, 500, 860, 60); g.fill(); g.strokeStyle = '#3c3c55'; g.lineWidth = 10; rr(g, -250, -430, 500, 860, 60); g.stroke();
     gauge(g, 0, -40, 180, .5 + Math.sin(t * 2.3) * .3 + tremble, { face: C.ink2, rim: null, label: 'yours' });
     text(g, 'YOURS', 0, 300, 50, C.cream, { font: F.display, weight: 400 });
@@ -291,7 +291,6 @@ function kineticWords(g, t, x, ox, oy, size = 118) {
   }));
 }
 function S06(g, t, x) {
-  x.ownLyrics = true;
   const lt = x.lt, k = Math.floor(lt / BAR);
   rays(g, 520, 560, 24, t * .25, '#5a1530', '#771a3a');
   glow(g, 520, 560, 800, C.coral, .35);
@@ -302,7 +301,6 @@ function S06(g, t, x) {
   g.restore();
   // giant percentage readout
   text(g, `${Math.round(x.p * 100)}%`, 520, 1000, 120, null, { font: F.display, weight: 400, stroke: C.cream, strokeW: 5 });
-  kineticWords(g, t, x, 980, 380);
 }
 
 // ============================================================ S07 / S12 / S16 helpers: bell curves and confetti
@@ -467,20 +465,40 @@ function S09(g, t, x) {
 
 // ============================================================ S11 the audience: many gauges (bars 41-44)
 function S11(g, t, x) {
-  const lt = x.lt, k = Math.min(3, Math.floor(lt / BAR)), n = [1, 2, 4, 8][k], into = (lt % BAR) / BAR;
-  g.fillStyle = C.ink; g.fillRect(0, 0, W, H);
-  const cols = n * 2, rows = n, cw = W / cols, ch = H / rows;
-  const grow = back(into / .25);
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-    const i = r * cols + c, cx = (c + .5) * cw, cy = (r + .5) * ch;
-    const d = Math.hypot(c - cols / 2 + .5, r - rows / 2 + .5);
-    const wave = Math.exp(-((((t / BEAT) % 1) * 6 - d * .5) ** 2));
-    g.fillStyle = [C.ink2, '#24183f', '#1b2a44', '#2d1530'][(r + c) % 4]; g.fillRect(c * cw + 2, r * ch + 2, cw - 4, ch - 4);
-    const rad = Math.min(cw, ch) * .32 * (n === 1 ? 1 : grow) * (1 + wave * .08);
-    const p = n === 1 ? x.p : clamp(x.p + (hash(i) - .5) * .7 + Math.sin(t * (2 + hash(i * 3) * 4) + i) * .08);
-    gauge(g, cx, cy, rad, p, { face: C.night, rim: wave > .5 ? C.sun : C.cream, readout: n <= 2 });
+  // the audience: a field of gauges on a floor plane rushing toward the camera, multiplying every bar
+  const lt = x.lt, k = Math.min(3, Math.floor(lt / BAR));
+  g.fillStyle = vgrad(g, 0, H, [[0, '#0b0c22'], [.42, '#2a1446'], [1, '#12142b']]); g.fillRect(0, 0, W, H);
+  const hz = 330;
+  glow(g, W / 2, hz, 900, C.violet, .35);
+  stars(g, t, 80, 17, hz);
+  g.strokeStyle = 'rgba(122,92,255,.35)'; g.lineWidth = 2;
+  for (let i = -20; i <= 20; i++) { g.beginPath(); g.moveTo(W / 2 + i * 12, hz); g.lineTo(W / 2 + i * 260, H); g.stroke(); }
+  const speed = 1.6, cols = [3, 5, 9, 13][k];
+  const items = [];
+  for (let r = 0; r < 14; r++) {
+    const z = 1 + ((r * .55 - lt * speed * .5) % 7.7 + 7.7) % 7.7;
+    for (let c = 0; c < cols; c++) {
+      const xs = (c - (cols - 1) / 2) * 330;
+      items.push({ z, xs, i: r * 31 + c });
+    }
   }
-  headlineCard(g, t, 5 + k, W / 2, 140, 36);
+  items.sort((a, b) => b.z - a.z);
+  for (const it of items) {
+    const sc = 1 / it.z, px = W / 2 + it.xs * sc * 1.4, py = hz + 760 * sc, rad = 120 * sc;
+    if (px < -200 || px > W + 200) continue;
+    const fog = clamp(1.25 - it.z / 6.5);
+    const wave = Math.exp(-((((t / BEAT) % 1) * 7 - it.z) ** 2));
+    const p = clamp(x.p + (hash(it.i) - .5) * .7 + Math.sin(t * (2 + hash(it.i * 3) * 4) + it.i) * .08);
+    g.save(); g.globalAlpha = fog;
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(px, py + rad * 1.35, rad * 1.1, rad * .25, 0, 0, 6.28); g.fill();
+    gauge(g, px, py, rad * (1 + wave * .12), p, { face: C.night, rim: wave > .4 ? C.sun : C.cream, readout: rad > 70 });
+    if (wave > .4) glow(g, px, py, rad * 2.2, C.sun, .25 * wave);
+    g.restore();
+  }
+  const fogG = g.createLinearGradient(0, hz - 40, 0, hz + 160); fogG.addColorStop(0, 'rgba(42,20,70,.9)'); fogG.addColorStop(1, 'rgba(42,20,70,0)');
+  g.fillStyle = fogG; g.fillRect(0, hz - 40, W, 200);
+  text(g, `${[1, 4, 16, 64][k] * 1000} OBSERVERS`, W - 60, 70, 30, rgba(C.cream, .8), { align: 'right', font: F.mono });
+  headlineCard(g, t, 5 + k, W / 2, 150, 34);
 }
 
 // ============================================================ S12 rain of papers and fires (bars 45-48)
@@ -506,34 +524,36 @@ function S12(g, t, x) {
 
 // ============================================================ S13 bridge: evidence -> belief pipeline (bars 49-52)
 function S13(g, t, x) {
+  // bridge: a monochrome evidence -> likelihood -> belief network; signals fire on the beat
   const lt = x.lt;
-  g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#070707'; g.fillRect(0, 0, W, H);
   for (let r = 0; r < 6; r++) { const off = (t * 60 * (r % 2 ? 1 : -1)) % 1600;
-    for (let k = -1; k < 3; k++) text(g, r % 2 ? 'BELIEF OUT' : 'EVIDENCE IN', off + k * 1600, 90 + r * 190, 150, null, { align: 'left', font: F.display, weight: 400, stroke: 'rgba(255,255,255,.07)', strokeW: 3 }); }
-  const nodes = [['EVIDENCE', 330, 540], ['LIKELIHOOD', 960, 330], ['BELIEF', 1590, 540]];
-  const reveal = i => back(inv(i * 1.0, i * 1.0 + .4, lt));
-  // flowing edges
-  g.lineWidth = 8;
-  [[0, 1], [1, 2], [0, 2]].forEach(([a, b], e) => {
-    const [, x0, y0] = nodes[a], [, x1, y1] = nodes[b];
-    const u = clamp(reveal(Math.max(a, b)));
-    const cx = (x0 + x1) / 2, cy = e === 2 ? 820 : (y0 + y1) / 2 - 60;
-    g.strokeStyle = 'rgba(255,255,255,.5)'; g.setLineDash([2, 22]); g.lineDashOffset = -t * 120; g.lineCap = 'round';
-    g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, lerp(x0, x1, u), lerp(y0, y1, u)); g.stroke(); g.setLineDash([]);
-    for (let d = 0; d < 5; d++) { const s = ((t * .5 + d / 5) % 1) * u; const px = (1 - s) ** 2 * x0 + 2 * (1 - s) * s * cx + s * s * x1, py = (1 - s) ** 2 * y0 + 2 * (1 - s) * s * cy + s * s * y1; circle(g, px, py, 10, '#fff'); }
-  });
-  nodes.forEach(([s, nx, ny], i) => {
-    const sc = reveal(i); if (sc <= 0) return;
-    g.save(); g.translate(nx, ny); g.scale(sc, sc);
-    const w = measure(g, s, 54, F.display, 400) + 90;
-    g.fillStyle = '#fff'; rr(g, -w / 2, -60, w, 120, 18); g.fill();
-    text(g, s, 0, 4, 54, '#0a0a0a', { font: F.display, weight: 400 });
+    for (let k = -1; k < 3; k++) text(g, r % 2 ? 'BELIEF OUT' : 'EVIDENCE IN', off + k * 1600, 90 + r * 190, 150, null, { align: 'left', font: F.display, weight: 400, stroke: 'rgba(255,255,255,.06)', strokeW: 3 }); }
+  const layers = [9, 12, 7, 1], X = [300, 760, 1200, 1620];
+  const nodes = layers.map((n, li) => Array.from({ length: n }, (_, i) => [X[li], n === 1 ? 470 : 140 + (i + .5) * (660 / n) + Math.sin(t * .8 + i + li) * 6]));
+  const reveal = li => smooth(inv(li * .9, li * .9 + .8, lt));
+  const beat = Math.floor(t / BEAT), ph = (t % BEAT) / BEAT;
+  for (let li = 0; li < 3; li++) {
+    const ra = reveal(li + 1);
+    nodes[li].forEach((a, i) => nodes[li + 1].forEach((b, j) => {
+      const w = hash(li * 100 + i * 13 + j);
+      if (w < .35) return;
+      g.strokeStyle = `rgba(255,255,255,${(.05 + .18 * w) * ra})`; g.lineWidth = 1 + w * 2;
+      g.beginPath(); g.moveTo(a[0], a[1]); g.bezierCurveTo((a[0] + b[0]) / 2, a[1], (a[0] + b[0]) / 2, b[1], b[0], b[1]); g.stroke();
+      if (ra > .9 && hash(beat * 7 + li * 50 + i * 3 + j) > .82) {     // a signal on this edge, this beat
+        const s = clamp(ph * 1.6), px = lerp(a[0], b[0], s), py = lerp(a[1], b[1], s * s * (3 - 2 * s));
+        circle(g, px, py, 6, '#fff'); glow(g, px, py, 40, '#ffffff', .5 * (1 - s));
+      }
+    }));
+  }
+  nodes.forEach((ln, li) => ln.forEach(([nx, ny], i) => {
+    const r = li === 3 ? 70 : 16, on = pulse(t + hash(li * 9 + i), BEAT, 6);
+    g.save(); g.globalAlpha = reveal(li);
+    circle(g, nx, ny, r + on * 4, li === 3 ? '#fff' : `rgba(255,255,255,${.35 + .6 * on})`);
+    if (li === 3) { text(g, x.p.toFixed(2), nx, ny + 2, 40, '#000', { font: F.mono }); glow(g, nx, ny, 260, '#ffffff', .25 + .2 * on); }
     g.restore();
-  });
-  // belief meter under BELIEF follows the needle
-  g.strokeStyle = '#fff'; g.lineWidth = 4; g.strokeRect(1390, 640, 400, 40);
-  g.fillStyle = '#fff'; g.fillRect(1396, 646, 388 * x.p, 28);
-  text(g, `${(x.p).toFixed(2)}`, 1590, 720, 40, '#fff', { font: F.mono });
+  }));
+  ['EVIDENCE', 'LIKELIHOOD', 'WEIGHTS', 'BELIEF'].forEach((s, i) => text(g, s, X[i], 70, 30, `rgba(255,255,255,${.85 * reveal(i)})`, { font: F.mono }));
   scanlines(g, .25);
 }
 
@@ -578,10 +598,10 @@ function crowdScene(g, t, x, { sky = ['#4b2a7a', '#ff6f61', '#ffc94d'], dial = t
   glow(g, W / 2, 1000, 900, C.sun, .4);
   if (dial) {
     g.save(); shake(g, t, kickPulse(t) * 4);
-    gauge(g, W / 2, 380, 250, x.p, { face: C.night, rim: C.cream });
+    gauge(g, W / 2, 320, 200, x.p, { face: C.night, rim: C.cream });
     g.restore();
     // hands from the crowd pushing the needle down
-    for (let i = 0; i < 5; i++) { const ph = pulse(t + i * .1, BEAT, 4); hand(g, 520 + i * 220, 820 - ph * 40, .55, (i - 2) * .15, [C.paper, '#e8b98f', '#a9714b', '#f1d0b5', '#7a4a2b'][i]); }
+    for (let i = 0; i < 5; i++) { const ph = pulse(t + i * .1, BEAT, 4); hand(g, 520 + i * 220, 900 - ph * 40, .5, (i - 2) * .15, [C.paper, '#e8b98f', '#a9714b', '#f1d0b5', '#7a4a2b'][i]); }
   }
   for (let r = 0; r < 3; r++) for (let i = 0; i < 22; i++) {
     const xx = (i + .5) * W / 22 + (r % 2) * 40 + Math.sin(i * 7) * 20, yy = 1010 + r * 50;
@@ -652,7 +672,9 @@ function S18(g, t, x) {
   g.save(); g.translate(W / 2, 640); g.scale(s, s);
   extrude(g, 'UPDATE MY PRIORS', 0, 0, 130, C.sun, C.sun2, 14);
   g.restore();
-  const lines = ['words, music, voice and pictures: made from code', 'voice: Kokoro-82M through the WORLD vocoder, sung by PRIOR', "it's a forecast, not a fate"];
+  const lines = window.PERFORMER
+    ? ['words, composition and pictures: made from code', `performed by ${window.PERFORMER}`, "it's a forecast, not a fate"]
+    : ['words, music, voice and pictures: made from code', 'voice: Kokoro-82M through the WORLD vocoder, sung by PRIOR', "it's a forecast, not a fate"];
   lines.forEach((l, i) => text(g, l, W / 2, 790 + i * 56, i === 2 ? 40 : 30, i === 2 ? C.cream : rgba(C.cream, .65), { font: i === 2 ? F.display : F.ui, weight: i === 2 ? 400 : 700, alpha: smooth(inv(1 + i * .8, 1.8 + i * .8, lt)) }));
   const fade = inv(8.5, 10.4, lt); if (fade > 0) { g.fillStyle = `rgba(0,0,0,${fade})`; g.fillRect(0, 0, W, H); }
 }

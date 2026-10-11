@@ -1,6 +1,6 @@
 # Update My Priors
 
-*Words and music by PRIOR, a robot whose face is a p(doom) gauge. Sung by PRIOR through a local neural voicebank (Kokoro-82M + WORLD vocoder).*
+*Words and music by PRIOR, a robot whose face is a p(doom) gauge. Main cut sung by ACE-Step 1.5 (Whisper hears 92% of these words); robot cut by PRIOR via Kokoro-82M + WORLD.*
 *Electro-pop, 120 BPM, A minor. The final chorus lifts to B minor. 2:24.*
 
 The song is about watching AI news at 3 a.m. and changing your estimate with
